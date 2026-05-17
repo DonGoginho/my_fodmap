@@ -1,0 +1,1426 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#2d6a4f">
+    <title>FODMAP Wochenplan</title>
+    <style>
+        :root {
+            --primary: #2d6a4f;
+            --primary-light: #40916c;
+            --accent: #d4a373;
+            --bg: #f8f6f0;
+            --card-bg: #ffffff;
+            --text: #2b2b2b;
+            --text-light: #555;
+            --border: #e9e2d0;
+            --tag-green: #d8f3dc;
+            --tag-orange: #ffe8d6;
+            --tag-blue: #d0e8f2;
+            --radius: 16px;
+            --safe-bottom: env(safe-area-inset-bottom, 0px);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        html {
+            scroll-behavior: smooth;
+            scroll-padding-top: 120px;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            padding-bottom: calc(80px + var(--safe-bottom));
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* HEADER - compact for mobile */
+        header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            color: white;
+            padding: 2rem 1.2rem 1.2rem;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 1.4rem;
+            margin-bottom: 0.3rem;
+            font-weight: 700;
+        }
+
+        header p {
+            font-size: 0.85rem;
+            opacity: 0.85;
+        }
+
+        /* INFO BANNERS */
+        .banners {
+            padding: 0.8rem;
+        }
+
+        .info-banner, .allergy-banner {
+            padding: 0.8rem 1rem;
+            margin-bottom: 0.5rem;
+            border-radius: 10px;
+            font-size: 0.82rem;
+            line-height: 1.5;
+        }
+
+        .info-banner {
+            background: var(--tag-orange);
+            border-left: 4px solid var(--accent);
+        }
+
+        .allergy-banner {
+            background: #fce4ec;
+            border-left: 4px solid #c62828;
+        }
+
+        .info-banner strong { color: var(--primary); }
+        .allergy-banner strong { color: #c62828; }
+
+        /* TAB NAVIGATION - fixed bottom */
+        .tab-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            display: flex;
+            justify-content: space-around;
+            padding: 0.6rem 0.3rem calc(0.6rem + var(--safe-bottom));
+            box-shadow: 0 -2px 12px rgba(0,0,0,0.1);
+            z-index: 1000;
+            border-top: 1px solid var(--border);
+        }
+
+        .tab-nav button {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.15rem;
+            background: none;
+            border: none;
+            padding: 0.4rem 0.5rem;
+            border-radius: 10px;
+            font-size: 0.65rem;
+            font-weight: 600;
+            color: var(--text-light);
+            cursor: pointer;
+            transition: all 0.2s;
+            min-width: 44px;
+            min-height: 44px;
+        }
+
+        .tab-nav button.active {
+            color: var(--primary);
+            background: var(--tag-green);
+        }
+
+        .tab-nav button .tab-icon {
+            font-size: 1.3rem;
+            line-height: 1;
+        }
+
+        /* DAY SECTIONS */
+        .day-section {
+            display: none;
+            padding: 0.8rem;
+            animation: fadeIn 0.25s ease;
+        }
+
+        .day-section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .day-title {
+            font-size: 1.3rem;
+            color: var(--primary);
+            padding: 0.5rem 0 0.8rem;
+            font-weight: 700;
+        }
+
+        /* MEAL CARDS - stacked for mobile */
+        .meal-card {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            border: 1px solid var(--border);
+            margin-bottom: 1rem;
+            transition: transform 0.15s;
+        }
+
+        .meal-card:active {
+            transform: scale(0.98);
+        }
+
+        .meal-header {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            padding: 1rem 1rem 0.6rem;
+            cursor: pointer;
+        }
+
+        .meal-emoji {
+            font-size: 2.2rem;
+            width: 52px;
+            height: 52px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            flex-shrink: 0;
+        }
+
+        .emoji-breakfast { background: linear-gradient(135deg, #fef3c7, #fde68a); }
+        .emoji-lunch { background: linear-gradient(135deg, #d1fae5, #a7f3d0); }
+        .emoji-dinner { background: linear-gradient(135deg, #dbeafe, #bfdbfe); }
+        .emoji-snack { background: linear-gradient(135deg, #f3e8ff, #e9d5ff); }
+
+        .meal-header-text {
+            flex: 1;
+        }
+
+        .meal-header-text .meal-tag {
+            display: inline-block;
+            padding: 0.15rem 0.5rem;
+            border-radius: 8px;
+            font-size: 0.65rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.2rem;
+        }
+
+        .tag-fruehstueck { background: var(--tag-orange); color: #bc6c25; }
+        .tag-mittag { background: var(--tag-green); color: #2d6a4f; }
+        .tag-abend { background: var(--tag-blue); color: #1d5c7a; }
+        .tag-snack { background: #f3e8ff; color: #6b21a8; }
+
+        .meal-header-text h3 {
+            font-size: 1rem;
+            line-height: 1.3;
+            color: var(--text);
+        }
+
+        .meal-toggle {
+            font-size: 1.2rem;
+            color: var(--text-light);
+            transition: transform 0.3s;
+            flex-shrink: 0;
+        }
+
+        .meal-card.open .meal-toggle {
+            transform: rotate(180deg);
+        }
+
+        /* MEAL DETAILS - collapsible */
+        .meal-details {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.35s ease;
+        }
+
+        .meal-card.open .meal-details {
+            max-height: 800px;
+        }
+
+        .meal-content {
+            padding: 0 1rem 1.2rem;
+        }
+
+        .meal-content h4 {
+            font-size: 0.78rem;
+            color: var(--primary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 0.8rem;
+            margin-bottom: 0.3rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid var(--border);
+        }
+
+        .meal-content h4:first-child {
+            border-top: none;
+            padding-top: 0;
+        }
+
+        .ingredients {
+            list-style: none;
+            padding: 0;
+        }
+
+        .ingredients li {
+            padding: 0.3rem 0;
+            font-size: 0.88rem;
+            color: var(--text-light);
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 1px dotted var(--border);
+        }
+
+        .ingredients li:last-child {
+            border-bottom: none;
+        }
+
+        .ingredients li span {
+            font-weight: 600;
+            color: var(--text);
+            white-space: nowrap;
+            margin-right: 0.5rem;
+        }
+
+        .recipe-steps {
+            margin-top: 0.3rem;
+            font-size: 0.85rem;
+            color: var(--text-light);
+            line-height: 1.7;
+        }
+
+        .recipe-steps ol {
+            padding-left: 1.2rem;
+        }
+
+        .recipe-steps li {
+            margin-bottom: 0.4rem;
+        }
+
+        .portion-info {
+            margin-top: 0.8rem;
+            padding: 0.6rem 0.8rem;
+            background: #f0f4f0;
+            border-radius: 10px;
+            font-size: 0.8rem;
+            color: var(--text-light);
+        }
+
+        .portion-info strong {
+            color: var(--primary);
+        }
+
+        .source-note {
+            font-size: 0.72rem;
+            color: #999;
+            margin-top: 0.4rem;
+            font-style: italic;
+            line-height: 1.4;
+        }
+
+        /* FOOTER */
+        footer {
+            background: var(--primary);
+            color: white;
+            padding: 1.5rem 1rem;
+            margin-bottom: 0;
+            font-size: 0.78rem;
+            line-height: 1.6;
+        }
+
+        footer p { opacity: 0.85; }
+        footer a { color: #a7f3d0; }
+
+        /* DESKTOP ENHANCEMENTS */
+        @media (min-width: 768px) {
+            header { padding: 3rem 2rem 1.5rem; }
+            header h1 { font-size: 2rem; }
+            header p { font-size: 1rem; }
+            .banners { max-width: 800px; margin: 0 auto; padding: 1.5rem; }
+            .day-section { max-width: 800px; margin: 0 auto; padding: 1.5rem; }
+            .day-title { font-size: 1.5rem; }
+            .tab-nav {
+                position: sticky;
+                top: 0;
+                bottom: auto;
+                box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+                padding: 0.8rem 2rem;
+            }
+            body { padding-bottom: 0; }
+            .tab-nav button { flex-direction: row; gap: 0.4rem; font-size: 0.85rem; }
+            .meal-card { margin-bottom: 1.2rem; }
+            footer { text-align: center; padding: 2rem; }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>FODMAP Wochenplan</h1>
+    <p>Woche 1 · Eliminationsphase · Portionen für 1 Person</p>
+</header>
+
+<div class="banners">
+    <div class="info-banner">
+        <strong>Quellen:</strong> Monash University FODMAP App, fodmap-konzept.ch, reizdarmblog.de. Portionsgrössen nach Monash-Ampelsystem (grün = sicher).
+    </div>
+    <div class="allergy-banner">
+        <strong>Ohne:</strong> Nüsse · Bananen · Sojaprodukte (kein Tofu, keine Sojasauce, keine Sojamilch)
+    </div>
+</div>
+
+<!-- MONTAG -->
+<section class="day-section active" id="tag1">
+    <h2 class="day-title">Montag</h2>
+
+    <article class="meal-card">
+        <div class="meal-header" onclick="toggleMeal(this)">
+            <div class="meal-emoji emoji-breakfast">🥣</div>
+            <div class="meal-header-text">
+                <span class="meal-tag tag-fruehstueck">Frühstück</span>
+                <h3>Haferbrei mit Blaubeeren & Kürbiskernen</h3>
+            </div>
+            <span class="meal-toggle">▾</span>
+        </div>
+        <div class="meal-details">
+            <div class="meal-content">
+                <h4>Zutaten</h4>
+                <ul class="ingredients">
+                    <li><span>40 g</span> Haferflocken (glutenfrei)</li>
+                    <li><span>200 ml</span> laktosefreie Milch</li>
+                    <li><span>50 g</span> Blaubeeren</li>
+                    <li><span>1 EL</span> Kürbiskerne</li>
+                    <li><span>1 EL</span> Ahornsirup</li>
+                    <li><span>1 Prise</span> Zimt</li>
+                </ul>
+                <h4>Zubereitung</h4>
+                <div class="recipe-steps">
+                    <ol>
+                        <li>Haferflocken mit Milch aufkochen.</li>
+                        <li>4–5 Min. köcheln bis cremig.</li>
+                        <li>Mit Blaubeeren, Kürbiskernen, Ahornsirup und Zimt toppen.</li>
+                    </ol>
+                </div>
+                <div class="portion-info"><strong>1 Portion</strong> · ca. 360 kcal · 8 Min.</div>
+                <p class="source-note">Hafer gf grün ≤52 g · Blaubeeren grün ≤125 g · Kürbiskerne grün ≤2 EL (Monash)</p>
+            </div>
+        </div>
+    </article>
+
+    <article class="meal-card">
+        <div class="meal-header" onclick="toggleMeal(this)">
+            <div class="meal-emoji emoji-lunch">🍗</div>
+            <div class="meal-header-text">
+                <span class="meal-tag tag-mittag">Mittagessen</span>
+                <h3>Poulet mit Reis & Rüebli-Zucchetti</h3>
+            </div>
+            <span class="meal-toggle">▾</span>
+        </div>
+        <div class="meal-details">
+            <div class="meal-content">
+                <h4>Zutaten</h4>
+                <ul class="ingredients">
+                    <li><span>150 g</span> Pouletbrust</li>
+                    <li><span>80 g</span> Basmatireis (roh)</li>
+                    <li><span>1</span> Rüebli, in Scheiben</li>
+                    <li><span>½</span> Zucchetti, gewürfelt</li>
+                    <li><span>1 EL</span> Olivenöl</li>
+                    <li><span>½ TL</span> Kurkuma</li>
+                    <li><span></span> Salz, Pfeffer</li>
+                </ul>
+                <h4>Zubereitung</h4>
+                <div class="recipe-steps">
+                    <ol>
+                        <li>Reis kochen.</li>
+                        <li>Poulet in Olivenöl 5–6 Min. pro Seite braten.</li>
+                        <li>Gemüse 4 Min. anbraten, Kurkuma dazu.</li>
+                        <li>Zusammen anrichten.</li>
+                    </ol>
+                </div>
+                <div class="portion-info"><strong>1 Portion</strong> · ca. 520 kcal · 25 Min.</div>
+                <p class="source-note">Poulet grün · Reis grün · Rüebli grün · Zucchetti grün ≤65 g (Monash)</p>
+            </div>
+        </div>
+    </article>
+
+    <article class="meal-card">
+        <div class="meal-header" onclick="toggleMeal(this)">
+            <div class="meal-emoji emoji-dinner">🐟</div>
+            <div class="meal-header-text">
+                <span class="meal-tag tag-abend">Abendessen</span>
+                <h3>Lachs mit Kartoffeln & Spinat</h3>
+            </div>
+            <span class="meal-toggle">▾</span>
+        </div>
+        <div class="meal-details">
+            <div class="meal-content">
+                <h4>Zutaten</h4>
+                <ul class="ingredients">
+                    <li><span>130 g</span> Lachsfilet</li>
+                    <li><span>200 g</span> Kartoffeln, gewürfelt</li>
+                    <li><span>80 g</span> Blattspinat</li>
+                    <li><span>1 EL</span> Olivenöl</li>
+                    <li><span>½</span> Zitrone (Saft)</li>
+                    <li><span></span> Salz, Pfeffer, Dill</li>
+                </ul>
+                <h4>Zubereitung</h4>
+                <div class="recipe-steps">
+                    <ol>
+                        <li>Kartoffeln 15 Min. weich kochen.</li>
+                        <li>Lachs mit Zitrone beträufeln, 4 Min. pro Seite braten.</li>
+                        <li>Spinat in der Pfanne zusammenfallen lassen.</li>
+                        <li>Mit Dill garnieren.</li>
+                    </ol>
+                </div>
+                <div class="portion-info"><strong>1 Portion</strong> · ca. 490 kcal · 25 Min.</div>
+                <p class="source-note">Lachs grün · Kartoffeln grün · Spinat grün ≤130 g (Monash)</p>
+            </div>
+        </div>
+    </article>
+
+    <article class="meal-card">
+        <div class="meal-header" onclick="toggleMeal(this)">
+            <div class="meal-emoji emoji-snack">🍓</div>
+            <div class="meal-header-text">
+                <span class="meal-tag tag-snack">Snack</span>
+                <h3>Erdbeeren mit Reiscracker & Tahini</h3>
+            </div>
+            <span class="meal-toggle">▾</span>
+        </div>
+        <div class="meal-details">
+            <div class="meal-content">
+                <h4>Zutaten</h4>
+                <ul class="ingredients">
+                    <li><span>100 g</span> Erdbeeren</li>
+                    <li><span>3</span> Reiswaffeln</li>
+                    <li><span>1 EL</span> Tahini (Sesammus)</li>
+                </ul>
+                <h4>Zubereitung</h4>
+                <div class="recipe-steps">
+                    <ol>
+                        <li>Reiswaffeln mit Tahini bestreichen.</li>
+                        <li>Erdbeeren vierteln und darauf verteilen.</li>
+                    </ol>
+                </div>
+                <div class="portion-info"><strong>1 Portion</strong> · ca. 180 kcal · 3 Min.</div>
+                <p class="source-note">Erdbeeren grün ≤140 g · Tahini grün ≤1 EL (Monash)</p>
+            </div>
+        </div>
+    </article>
+</section>
+
+<!-- DIENSTAG -->
+<section class="day-section" id="tag2">
+    <h2 class="day-title">Dienstag</h2>
+
+    <article class="meal-card">
+        <div class="meal-header" onclick="toggleMeal(this)">
+            <div class="meal-emoji emoji-breakfast">🍳</div>
+            <div class="meal-header-text">
+                <span class="meal-tag tag-fruehstueck">Frühstück</span>
+                <h3>Rührei auf glutenfreiem Toast</h3>
+            </div>
+            <span class="meal-toggle">▾</span>
+        </div>
+        <div class="meal-details">
+            <div class="meal-content">
+                <h4>Zutaten</h4>
+                <ul class="ingredients">
+                    <li><span>2</span> Eier</li>
+                    <li><span>2 Scheiben</span> glutenfreies Brot</li>
+                    <li><span>1 EL</span> Butter</li>
+                    <li><span>30 g</span> Cheddar, gerieben</li>
+                    <li><span>1 Handvoll</span> Schnittlauch</li>
+                    <li><span></span> Salz, Pfeffer</li>
+                </ul>
+                <h4>Zubereitung</h4>
+                <div class="recipe-steps">
+                    <ol>
+                        <li>Eier verquirlen, würzen.</li>
+                        <li>In Butter bei niedriger Hitze stocken lassen.</li>
+                        <li>Auf Toast mit Käse und Schnittlauch servieren.</li>
+                    </ol>
+                </div>
+                <div class="portion-info"><strong>1 Portion</strong> · ca. 420 kcal · 8 Min.</div>
+                <p class="source-note">Eier grün · Cheddar grün (laktosearm) · gf Brot grün (Monash)</p>
+            </div>
+        </div>
+    </article>
+
+    <article class="meal-card">
+        <div class="meal-header" onclick="toggleMeal(this)">
+            <div class="meal-emoji emoji-lunch">🥗</div>
+            <div class="meal-header-text">
+                <span class="meal-tag tag-mittag">Mittagessen</span>
+                <h3>Quinoa-Salat mit Peperoni & Feta</h3>
+            </div>
+            <span class="meal-toggle">▾</span>
+        </div>
+        <div class="meal-details">
+            <div class="meal-content">
+                <h4>Zutaten</h4>
+                <ul class="ingredients">
+                    <li><span>70 g</span> Quinoa (roh)</li>
+                    <li><span>1</span> rote Peperoni, gewürfelt</li>
+                    <li><span>½</span> Salatgurke, gewürfelt</li>
+                    <li><span>40 g</span> Feta</li>
+                    <li><span>8</span> Oliven</li>
+                    <li><span>2 EL</span> Olivenöl</li>
+                    <li><span>1 EL</span> Zitronensaft</li>
+                    <li><span></span> Salz, Pfeffer, Minze</li>
+                </ul>
+                <h4>Zubereitung</h4>
+                <div class="recipe-steps">
+                    <ol>
+                        <li>Quinoa 15 Min. kochen, abkühlen lassen.</li>
+                        <li>Peperoni, Gurke, Oliven und Feta untermischen.</li>
+                        <li>Mit Olivenöl-Zitronen-Dressing anmachen.</li>
+                    </ol>
+                </div>
+                <div class="portion-info"><strong>1 Portion</strong> · ca. 480 kcal · 20 Min.</div>
+                <p class="source-note">Quinoa grün ≤155 g gekocht · Peperoni grün ≤52 g · Feta grün ≤125 g (Monash)</p>
+            </div>
+        </div>
+    </article>
+
+    <article class="meal-card">
+        <div class="meal-header" onclick="toggleMeal(this)">
+            <div class="meal-emoji emoji-dinner">🍝</div>
+            <div class="meal-header-text">
+                <span class="meal-tag tag-abend">Abendessen</span>
+                <h3>Glutenfreie Pasta mit Poulet & Tomaten</h3>
+            </div>
+            <span class="meal-toggle">▾</span>
+        </div>
+        <div class="meal-details">
+            <div class="meal-content">
+                <h4>Zutaten</h4>
+                <ul class="ingredients">
+                    <li><span>100 g</span> glutenfreie Penne</li>
+                    <li><span>120 g</span> Pouletbrust, in Streifen</li>
+                    <li><span>150 g</span> Cherrytomaten, halbiert</li>
+                    <li><span>1 EL</span> Knoblauchöl (nur Öl!)</li>
+                    <li><span>30 g</span> Parmesan</li>
+                    <li><span></span> Basilikum, Salz, Pfeffer</li>
+                </ul>
+                <h4>Zubereitung</h4>
+                <div class="recipe-steps">
+                    <ol>
+                        <li>Pasta al dente kochen.</li>
+                        <li>Poulet in Knoblauchöl goldbraun braten (5 Min.).</li>
+                        <li>Tomaten 3 Min. mitbraten.</li>
+                        <li>Mit Pasta, Parmesan und Basilikum servieren.</li>
+                    </ol>
+                </div>
+                <div class="portion-info"><strong>1 Portion</strong> · ca. 560 kcal · 20 Min.</div>
+                <p class="source-note">gf Pasta grün · Knoblauchöl grün (FODMAPs nicht fettlöslich) · Tomaten grün ≤5 Stk (Monash)</p>
+            </div>
+        </div>
+    </article>
+
+    <article class="meal-card">
+        <div class="meal-header" onclick="toggleMeal(this)">
+            <div class="meal-emoji emoji-snack">🫐</div>
+            <div class="meal-header-text">
+                <span class="meal-tag tag-snack">Snack</span>
+                <h3>Reiswaffeln mit Heidelbeeren</h3>
+            </div>
+            <span class="meal-toggle">▾</span>
+        </div>
+        <div class="meal-details">
+            <div class="meal-content">
+                <h4>Zutaten</h4>
+                <ul class="ingredients">
+                    <li><span>4</span> Reiswaffeln</li>
+                    <li><span>80 g</span> Heidelbeeren</li>
+                    <li><span>1 EL</span> Ahornsirup</li>
+                </ul>
+                <h4>Zubereitung</h4>
+                <div class="recipe-steps">
+                    <ol>
+                        <li>Heidelbeeren auf Reiswaffeln verteilen.</li>
+                        <li>Mit Ahornsirup beträufeln.</li>
+                    </ol>
+                </div>
+                <div class="portion-info"><strong>1 Portion</strong> · ca. 140 kcal · 2 Min.</div>
+                <p class="source-note">Heidelbeeren grün ≤125 g · Ahornsirup grün ≤2 EL (Monash)</p>
+            </div>
+        </div>
+    </article>
+</section>
+
+<!-- MITTWOCH -->
+<section class="day-section" id="tag3">
+    <h2 class="day-title">Mittwoch</h2>
+
+    <article class="meal-card">
+        <div class="meal-header" onclick="toggleMeal(this)">
+            <div class="meal-emoji emoji-breakfast">🥞</div>
+            <div class="meal-header-text">
+                <span class="meal-tag tag-fruehstueck">Frühstück</span>
+                <h3>Buchweizen-Pancakes mit Erdbeeren</h3>
+            </div>
+            <span class="meal-toggle">▾</span>
+        </div>
+        <div class="meal-details">
+            <div class="meal-content">
+                <h4>Zutaten</h4>
+                <ul class="ingredients">
+                    <li><span>60 g</span> Buchweizenmehl</li>
+                    <li><span>1</span> Ei</li>
+                    <li><span>100 ml</span> laktosefreie Milch</li>
+                    <li><span>1 TL</span> Backpulver</li>
+                    <li><span>1 EL</span> Ahornsirup</li>
+                    <li><span>80 g</span> Erdbeeren, geschnitten</li>
+                    <li><span>1 TL</span> Butter</li>
+                </ul>
+                <h4>Zubereitung</h4>
+                <div class="recipe-steps">
+                    <ol>
+                        <li>Mehl, Ei, Milch und Backpulver glatt rühren.</li>
+                        <li>Kleine Pancakes in Butter backen (2 Min. pro Seite).</li>
+                        <li>Mit Erdbeeren und Ahornsirup servieren.</li>
+                    </ol>
+                </div>
+                <div class="portion-info"><strong>1 Portion (4 Stück)</strong> · ca. 340 kcal · 15 Min.</div>
+                <p class="source-note">Buchweizenmehl grün · Erdbeeren grün ≤140 g (Monash)</p>
+            </div>
+        </div>
+    </article>
+
+    <article class="meal-card">
+        <div class="meal-header" onclick="toggleMeal(this)">
+            <div class="meal-emoji emoji-lunch">🥔</div>
+            <div class="meal-header-text">
+                <span class="meal-tag tag-mittag">Mittagessen</span>
+                <h3>Kartoffelsuppe mit Schnittlauch</h3>
+            </div>
+            <span class="meal-toggle">▾</span>
+        </div>
+        <div class="meal-details">
+            <div class="meal-content">
+                <h4>Zutaten</h4>
+                <ul class="ingredients">
+                    <li><span>300 g</span> Kartoffeln, gewürfelt</li>
+                    <li><span>1</span> Rüebli, in Scheiben</li>
+                    <li><span>400 ml</span> FODMAP-arme Gemüsebrühe</li>
+                    <li><span>100 ml</span> laktosefreier Rahm</li>
+                    <li><span>1 EL</span> Olivenöl</li>
+                    <li><span></span> Schnittlauch, Salz, Pfeffer, Muskat</li>
+                </ul>
+                <h4>Zubereitung</h4>
+                <div class="recipe-steps">
+                    <ol>
+                        <li>Kartoffeln und Rüebli in Öl andünsten.</li>
+                        <li>Mit Brühe ablöschen, 15 Min. weich kochen.</li>
+                        <li>Pürieren, Rahm einrühren, würzen.</li>
+                        <li>Mit Schnittlauch servieren.</li>
+                    </ol>
+                </div>
+                <div class="portion-info"><strong>1 grosse Portion</strong> · ca. 380 kcal · 25 Min.</div>
+                <p class="source-note">Brühe OHNE Zwiebel/Knoblauch verwenden (z. B. Fody) · Kartoffeln grün (Monash)</p>
+            </div>
+        </div>
+    </article>
+
+    <article class="meal-card">
+        <div class="meal-header" onclick="toggleMeal(this)">
+            <div class="meal-emoji emoji-dinner">🥩</div>
+            <div class="meal-header-text">
+                <span class="meal-tag tag-abend">Abendessen</span>
+                <h3>Rindsgeschnetzeltes mit Polenta</h3>
+            </div>
+            <span class="meal-toggle">▾</span>
+        </div>
+        <div class="meal-details">
+            <div class="meal-content">
+                <h4>Zutaten</h4>
+                <ul class="ingredients">
+                    <li><span>150 g</span> Rindsgeschnetzeltes</li>
+                    <li><span>60 g</span> Polenta (Maisgriess)</li>
+                    <li><span>250 ml</span> Wasser</li>
+                    <li><span>1</span> Rüebli, feine Streifen</li>
+                    <li><span>1 EL</span> Knoblauchöl</li>
+                    <li><span>20 g</span> Parmesan</li>
+                    <li><span></span> Rosmarin, Salz, Pfeffer</li>
+                </ul>
+                <h4>Zubereitung</h4>
+                <div class="recipe-steps">
+                    <ol>
+                        <li>Polenta in Salzwasser 10 Min. quellen, Parmesan unterheben.</li>
+                        <li>Fleisch in Knoblauchöl scharf anbraten (3 Min.).</li>
+                        <li>Rüebli 3 Min. mitbraten, mit Rosmarin würzen.</li>
+                        <li>Auf Polenta anrichten.</li>
+                    </ol>
+                </div>
+                <div class="portion-info"><strong>1 Portion</strong> · ca. 530 kcal · 20 Min.</div>
+                <p class="source-note">Rindfleisch grün · Polenta (Mais) grün · Parmesan grün (laktosefrei, Monash)</p>
+            </div>
+        </div>
+    </article>
+
+    <article class="meal-card">
+        <div class="meal-header" onclick="toggleMeal(this)">
+            <div class="meal-emoji emoji-snack">🧀</div>
+            <div class="meal-header-text">
+                <span class="meal-tag tag-snack">Snack</span>
+                <h3>Reiswaffeln mit Gruyère & Trauben</h3>
+            </div>
+            <span class="meal-toggle">▾</span>
+        </div>
+        <div class="meal-details">
+            <div class="meal-content">
+                <h4>Zutaten</h4>
+                <ul class="ingredients">
+                    <li><span>3</span> Reiswaffeln</li>
+                    <li><span>40 g</span> Gruyère</li>
+                    <li><span>80 g</span> Trauben</li>
+                </ul>
+                <h4>Zubereitung</h4>
+                <div class="recipe-steps">
+                    <ol>
+                        <li>Käse in Scheiben auf Reiswaffeln legen.</li>
+                        <li>Mit Trauben geniessen.</li>
+                    </ol>
+                </div>
+                <div class="portion-info"><strong>1 Portion</strong> · ca. 250 kcal · 2 Min.</div>
+                <p class="source-note">Gruyère grün (Hartkäse laktosearm) · Trauben grün ≤150 g (Monash)</p>
+            </div>
+        </div>
+    </article>
+</section>
+
+<!-- DONNERSTAG -->
+<section class="day-section" id="tag4">
+    <h2 class="day-title">Donnerstag</h2>
+
+    <article class="meal-card">
+        <div class="meal-header" onclick="toggleMeal(this)">
+            <div class="meal-emoji emoji-breakfast">🥛</div>
+            <div class="meal-header-text">
+                <span class="meal-tag tag-fruehstueck">Frühstück</span>
+                <h3>Smoothie mit Heidelbeeren, Spinat & Hafer</h3>
+            </div>
+            <span class="meal-toggle">▾</span>
+        </div>
+        <div class="meal-details">
+            <div class="meal-content">
+                <h4>Zutaten</h4>
+                <ul class="ingredients">
+                    <li><span>100 g</span> Heidelbeeren</li>
+                    <li><span>30 g</span> Spinat</li>
+                    <li><span>20 g</span> Haferflocken (glutenfrei)</li>
+                    <li><span>200 ml</span> laktosefreie Milch</li>
+                    <li><span>1 EL</span> Tahini</li>
+                    <li><span>1 EL</span> Ahornsirup</li>
+                    <li><span>3</span> Eiswürfel</li>
+                </ul>
+                <h4>Zubereitung</h4>
+                <div class="recipe-steps">
+                    <ol>
+                        <li>Alle Zutaten in den Mixer.</li>
+                        <li>30 Sek. auf höchster Stufe mixen.</li>
+                        <li>Sofort trinken.</li>
+                    </ol>
+                </div>
+                <div class="portion-info"><strong>1 Glas (400 ml)</strong> · ca. 320 kcal · 5 Min.</div>
+                <p class="source-note">Heidelbeeren grün ≤125 g · Spinat grün ≤130 g · Tahini grün ≤1 EL (Monash)</p>
+            </div>
+        </div>
+    </article>
+
+    <article class="meal-card">
+        <div class="meal-header" onclick="toggleMeal(this)">
+            <div class="meal-emoji emoji-lunch">🌮</div>
+            <div class="meal-header-text">
+                <span class="meal-tag tag-mittag">Mittagessen</span>
+                <h3>Poulet-Wraps mit Lattich & Peperoni</h3>
+            </div>
+            <span class="meal-toggle">▾</span>
+        </div>
+        <div class="meal-details">
+            <div class="meal-content">
+                <h4>Zutaten</h4>
+                <ul class="ingredients">
+                    <li><span>2</span> Mais-Tortillas (glutenfrei)</li>
+                    <li><span>120 g</span> Pouletbrust, in Streifen</li>
+                    <li><span>4 Blätter</span> Lattich</li>
+                    <li><span>½</span> rote Peperoni, Streifen</li>
+                    <li><span>1 EL</span> Olivenöl</li>
+                    <li><span>½ TL</span> Kreuzkümmel</li>
+                    <li><span>½ TL</span> Paprika</li>
+                    <li><span></span> Salz, Pfeffer</li>
+                </ul>
+                <h4>Zubereitung</h4>
+                <div class="recipe-steps">
+                    <ol>
+                        <li>Poulet mit Gewürzen in Öl braten (5–6 Min.).</li>
+                        <li>Peperoni kurz mitbraten.</li>
+                        <li>Tortillas erwärmen, mit Lattich und Füllung belegen, rollen.</li>
+                    </ol>
+                </div>
+                <div class="portion-info"><strong>1 Portion (2 Wraps)</strong> · ca. 450 kcal · 15 Min.</div>
+                <p class="source-note">Maistortillas grün · Lattich grün · Peperoni grün ≤52 g (Monash)</p>
+            </div>
+        </div>
+    </article>
+
+    <article class="meal-card">
+        <div class="meal-header" onclick="toggleMeal(this)">
+            <div class="meal-emoji emoji-dinner">🐟</div>
+            <div class="meal-header-text">
+                <span class="meal-tag tag-abend">Abendessen</span>
+                <h3>Reis-Bowl mit Lachs & Pak Choi</h3>
+            </div>
+            <span class="meal-toggle">▾</span>
+        </div>
+        <div class="meal-details">
+            <div class="meal-content">
+                <h4>Zutaten</h4>
+                <ul class="ingredients">
+                    <li><span>80 g</span> Jasminreis (roh)</li>
+                    <li><span>130 g</span> Lachsfilet</li>
+                    <li><span>2</span> Pak Choi, halbiert</li>
+                    <li><span>1 EL</span> Sesamöl</li>
+                    <li><span>1 TL</span> Fischsauce</li>
+                    <li><span>1 TL</span> Ingwer, gerieben</li>
+                    <li><span></span> Sesam, Frühlingszwiebel (nur grün)</li>
+                </ul>
+                <h4>Zubereitung</h4>
+                <div class="recipe-steps">
+                    <ol>
+                        <li>Reis kochen.</li>
+                        <li>Lachs in Sesamöl mit Ingwer 4 Min. pro Seite braten.</li>
+                        <li>Pak Choi 2 Min. anbraten.</li>
+                        <li>Auf Reis anrichten, mit Fischsauce, Sesam und Zwiebelgrün toppen.</li>
+                    </ol>
+                </div>
+                <div class="portion-info"><strong>1 Portion</strong> · ca. 520 kcal · 20 Min.</div>
+                <p class="source-note">Lachs grün · Pak Choi grün · Fischsauce grün ≤1 EL · nur grüner Teil der Frühlingszwiebel (Monash)</p>
+            </div>
+        </div>
+    </article>
+
+    <article class="meal-card">
+        <div class="meal-header" onclick="toggleMeal(this)">
+            <div class="meal-emoji emoji-snack">🥝</div>
+            <div class="meal-header-text">
+                <span class="meal-tag tag-snack">Snack</span>
+                <h3>Kiwi mit Kürbiskernen</h3>
+            </div>
+            <span class="meal-toggle">▾</span>
+        </div>
+        <div class="meal-details">
+            <div class="meal-content">
+                <h4>Zutaten</h4>
+                <ul class="ingredients">
+                    <li><span>2</span> Kiwis</li>
+                    <li><span>1 EL</span> Kürbiskerne</li>
+                </ul>
+                <h4>Zubereitung</h4>
+                <div class="recipe-steps">
+                    <ol>
+                        <li>Kiwis schälen und schneiden.</li>
+                        <li>Mit Kürbiskernen bestreuen.</li>
+                    </ol>
+                </div>
+                <div class="portion-info"><strong>1 Portion</strong> · ca. 140 kcal · 2 Min.</div>
+                <p class="source-note">Kiwi grün ≤2 Stück · Kürbiskerne grün ≤2 EL (Monash)</p>
+            </div>
+        </div>
+    </article>
+</section>
+
+<!-- FREITAG -->
+<section class="day-section" id="tag5">
+    <h2 class="day-title">Freitag</h2>
+
+    <article class="meal-card">
+        <div class="meal-header" onclick="toggleMeal(this)">
+            <div class="meal-emoji emoji-breakfast">🍞</div>
+            <div class="meal-header-text">
+                <span class="meal-tag tag-fruehstueck">Frühstück</span>
+                <h3>Toast mit Räucherlachs & Gurke</h3>
+            </div>
+            <span class="meal-toggle">▾</span>
+        </div>
+        <div class="meal-details">
+            <div class="meal-content">
+                <h4>Zutaten</h4>
+                <ul class="ingredients">
+                    <li><span>2 Scheiben</span> glutenfreies Brot</li>
+                    <li><span>60 g</span> Räucherlachs</li>
+                    <li><span>¼</span> Salatgurke, Scheiben</li>
+                    <li><span>1 EL</span> Frischkäse (laktosefrei)</li>
+                    <li><span></span> Dill, Zitronenzeste, Pfeffer</li>
+                </ul>
+                <h4>Zubereitung</h4>
+                <div class="recipe-steps">
+                    <ol>
+                        <li>Brot toasten, mit Frischkäse bestreichen.</li>
+                        <li>Lachs und Gurke darauf legen.</li>
+                        <li>Mit Dill und Zitronenzeste würzen.</li>
+                    </ol>
+                </div>
+                <div class="portion-info"><strong>1 Portion</strong> · ca. 320 kcal · 5 Min.</div>
+                <p class="source-note">Räucherlachs grün · Gurke grün · laktosefreier Frischkäse grün (Monash)</p>
+            </div>
+        </div>
+    </article>
+
+    <article class="meal-card">
+        <div class="meal-header" onclick="toggleMeal(this)">
+            <div class="meal-emoji emoji-lunch">🥚</div>
+            <div class="meal-header-text">
+                <span class="meal-tag tag-mittag">Mittagessen</span>
+                <h3>Gemüse-Frittata mit Peperoni</h3>
+            </div>
+            <span class="meal-toggle">▾</span>
+        </div>
+        <div class="meal-details">
+            <div class="meal-content">
+                <h4>Zutaten</h4>
+                <ul class="ingredients">
+                    <li><span>3</span> Eier</li>
+                    <li><span>½</span> Zucchetti, dünne Scheiben</li>
+                    <li><span>½</span> rote Peperoni, gewürfelt</li>
+                    <li><span>30 g</span> Parmesan</li>
+                    <li><span>1 EL</span> Olivenöl</li>
+                    <li><span></span> Basilikum, Salz, Pfeffer</li>
+                </ul>
+                <h4>Zubereitung</h4>
+                <div class="recipe-steps">
+                    <ol>
+                        <li>Gemüse in Öl 3 Min. anbraten.</li>
+                        <li>Eier mit Parmesan verquirlen, darüber giessen.</li>
+                        <li>5 Min. stocken, 3 Min. unter Grill bräunen.</li>
+                    </ol>
+                </div>
+                <div class="portion-info"><strong>1 Portion</strong> · ca. 400 kcal · 15 Min.</div>
+                <p class="source-note">Eier grün · Zucchetti grün ≤65 g · Parmesan grün (Monash)</p>
+            </div>
+        </div>
+    </article>
+
+    <article class="meal-card">
+        <div class="meal-header" onclick="toggleMeal(this)">
+            <div class="meal-emoji emoji-dinner">🍤</div>
+            <div class="meal-header-text">
+                <span class="meal-tag tag-abend">Abendessen</span>
+                <h3>Crevetten mit Reisnudeln & Pak Choi</h3>
+            </div>
+            <span class="meal-toggle">▾</span>
+        </div>
+        <div class="meal-details">
+            <div class="meal-content">
+                <h4>Zutaten</h4>
+                <ul class="ingredients">
+                    <li><span>120 g</span> Crevetten (geschält)</li>
+                    <li><span>80 g</span> Reisnudeln</li>
+                    <li><span>2</span> Pak Choi</li>
+                    <li><span>1 EL</span> Sesamöl</li>
+                    <li><span>1 TL</span> Fischsauce</li>
+                    <li><span>1 TL</span> Ingwer, gerieben</li>
+                    <li><span>1</span> Limette (Saft)</li>
+                    <li><span></span> Sesam, Koriander</li>
+                </ul>
+                <h4>Zubereitung</h4>
+                <div class="recipe-steps">
+                    <ol>
+                        <li>Reisnudeln einweichen.</li>
+                        <li>Crevetten in Sesamöl mit Ingwer 3 Min. braten.</li>
+                        <li>Pak Choi 2 Min. mitbraten.</li>
+                        <li>Nudeln, Fischsauce, Limette unterheben.</li>
+                    </ol>
+                </div>
+                <div class="portion-info"><strong>1 Portion</strong> · ca. 400 kcal · 15 Min.</div>
+                <p class="source-note">Crevetten grün · Reisnudeln grün · Fischsauce grün ≤1 EL (Monash)</p>
+            </div>
+        </div>
+    </article>
+
+    <article class="meal-card">
+        <div class="meal-header" onclick="toggleMeal(this)">
+            <div class="meal-emoji emoji-snack">🍊</div>
+            <div class="meal-header-text">
+                <span class="meal-tag tag-snack">Snack</span>
+                <h3>Orange mit Sonnenblumenkernen</h3>
+            </div>
+            <span class="meal-toggle">▾</span>
+        </div>
+        <div class="meal-details">
+            <div class="meal-content">
+                <h4>Zutaten</h4>
+                <ul class="ingredients">
+                    <li><span>1</span> Orange</li>
+                    <li><span>1 EL</span> Sonnenblumenkerne</li>
+                </ul>
+                <h4>Zubereitung</h4>
+                <div class="recipe-steps">
+                    <ol>
+                        <li>Orange schälen, in Spalten teilen.</li>
+                        <li>Mit Sonnenblumenkernen knabbern.</li>
+                    </ol>
+                </div>
+                <div class="portion-info"><strong>1 Portion</strong> · ca. 130 kcal · 2 Min.</div>
+                <p class="source-note">Orange grün ≤130 g · Sonnenblumenkerne grün ≤2 EL (Monash)</p>
+            </div>
+        </div>
+    </article>
+</section>
+
+<!-- SAMSTAG -->
+<section class="day-section" id="tag6">
+    <h2 class="day-title">Samstag</h2>
+
+    <article class="meal-card">
+        <div class="meal-header" onclick="toggleMeal(this)">
+            <div class="meal-emoji emoji-breakfast">🫐</div>
+            <div class="meal-header-text">
+                <span class="meal-tag tag-fruehstueck">Frühstück</span>
+                <h3>Chia-Pudding mit Kokosmilch & Beeren</h3>
+            </div>
+            <span class="meal-toggle">▾</span>
+        </div>
+        <div class="meal-details">
+            <div class="meal-content">
+                <h4>Zutaten</h4>
+                <ul class="ingredients">
+                    <li><span>30 g</span> Chiasamen</li>
+                    <li><span>150 ml</span> Kokosmilch (Kühlregal)</li>
+                    <li><span>50 g</span> Heidelbeeren</li>
+                    <li><span>50 g</span> Himbeeren</li>
+                    <li><span>1 EL</span> Ahornsirup</li>
+                    <li><span>1 EL</span> Kokosflocken</li>
+                </ul>
+                <h4>Zubereitung</h4>
+                <div class="recipe-steps">
+                    <ol>
+                        <li>Chiasamen am Vorabend mit Kokosmilch und Sirup mischen.</li>
+                        <li>Mind. 4 Std. im Kühlschrank quellen.</li>
+                        <li>Mit Beeren und Kokosflocken toppen.</li>
+                    </ol>
+                </div>
+                <div class="portion-info"><strong>1 Portion</strong> · ca. 300 kcal · 5 Min. + Quellzeit</div>
+                <p class="source-note">Chiasamen grün ≤2 EL · Himbeeren grün ≤60 g · Kokosflocken grün (Monash)</p>
+            </div>
+        </div>
+    </article>
+
+    <article class="meal-card">
+        <div class="meal-header" onclick="toggleMeal(this)">
+            <div class="meal-emoji emoji-lunch">🐔</div>
+            <div class="meal-header-text">
+                <span class="meal-tag tag-mittag">Mittagessen</span>
+                <h3>Poulet-Curry mit Reis (mild)</h3>
+            </div>
+            <span class="meal-toggle">▾</span>
+        </div>
+        <div class="meal-details">
+            <div class="meal-content">
+                <h4>Zutaten</h4>
+                <ul class="ingredients">
+                    <li><span>150 g</span> Pouletbrust, gewürfelt</li>
+                    <li><span>80 g</span> Basmatireis (roh)</li>
+                    <li><span>1</span> Rüebli, Scheiben</li>
+                    <li><span>100 ml</span> Kokosmilch (Dose, max. 125 ml)</li>
+                    <li><span>1 TL</span> Currypulver (ohne Zwiebel/Knoblauch)</li>
+                    <li><span>1 EL</span> Knoblauchöl</li>
+                    <li><span></span> Koriander, Salz</li>
+                </ul>
+                <h4>Zubereitung</h4>
+                <div class="recipe-steps">
+                    <ol>
+                        <li>Reis kochen.</li>
+                        <li>Poulet in Knoblauchöl 5 Min. braten.</li>
+                        <li>Rüebli und Curry 2 Min. anrösten.</li>
+                        <li>Kokosmilch dazu, 8 Min. köcheln.</li>
+                        <li>Mit Reis und Koriander servieren.</li>
+                    </ol>
+                </div>
+                <div class="portion-info"><strong>1 Portion</strong> · ca. 580 kcal · 25 Min.</div>
+                <p class="source-note">Kokosmilch (Dose) grün ≤125 ml · Currypulver: ohne Zwiebel/Knoblauch (Monash)</p>
+            </div>
+        </div>
+    </article>
+
+    <article class="meal-card">
+        <div class="meal-header" onclick="toggleMeal(this)">
+            <div class="meal-emoji emoji-dinner">🥗</div>
+            <div class="meal-header-text">
+                <span class="meal-tag tag-abend">Abendessen</span>
+                <h3>Kartoffelsalat mit Ei & Radieschen</h3>
+            </div>
+            <span class="meal-toggle">▾</span>
+        </div>
+        <div class="meal-details">
+            <div class="meal-content">
+                <h4>Zutaten</h4>
+                <ul class="ingredients">
+                    <li><span>250 g</span> festkochende Kartoffeln</li>
+                    <li><span>2</span> Eier, hart gekocht</li>
+                    <li><span>4</span> Radieschen, Scheiben</li>
+                    <li><span>1 EL</span> Dijon-Senf</li>
+                    <li><span>2 EL</span> Olivenöl</li>
+                    <li><span>1 EL</span> Weissweinessig</li>
+                    <li><span></span> Schnittlauch, Salz, Pfeffer</li>
+                </ul>
+                <h4>Zubereitung</h4>
+                <div class="recipe-steps">
+                    <ol>
+                        <li>Kartoffeln kochen (20 Min.), warm schneiden.</li>
+                        <li>Dressing aus Senf, Öl, Essig anrühren.</li>
+                        <li>Mit Radieschen und Eiern anrichten.</li>
+                        <li>Schnittlauch darüber.</li>
+                    </ol>
+                </div>
+                <div class="portion-info"><strong>1 Portion</strong> · ca. 450 kcal · 25 Min.</div>
+                <p class="source-note">Kartoffeln grün · Radieschen grün ≤4 Stk · Dijon grün ≤1 EL (Monash)</p>
+            </div>
+        </div>
+    </article>
+
+    <article class="meal-card">
+        <div class="meal-header" onclick="toggleMeal(this)">
+            <div class="meal-emoji emoji-snack">🍫</div>
+            <div class="meal-header-text">
+                <span class="meal-tag tag-snack">Snack</span>
+                <h3>Dunkle Schokolade & Trauben</h3>
+            </div>
+            <span class="meal-toggle">▾</span>
+        </div>
+        <div class="meal-details">
+            <div class="meal-content">
+                <h4>Zutaten</h4>
+                <ul class="ingredients">
+                    <li><span>20 g</span> dunkle Schokolade (≥70%)</li>
+                    <li><span>80 g</span> Trauben</li>
+                </ul>
+                <h4>Zubereitung</h4>
+                <div class="recipe-steps">
+                    <ol>
+                        <li>Schokolade in Stücke brechen.</li>
+                        <li>Mit Trauben geniessen.</li>
+                    </ol>
+                </div>
+                <div class="portion-info"><strong>1 Portion</strong> · ca. 180 kcal · 1 Min.</div>
+                <p class="source-note">Dunkle Schoko grün ≤30 g · Trauben grün ≤150 g (Monash)</p>
+            </div>
+        </div>
+    </article>
+</section>
+
+<!-- SONNTAG -->
+<section class="day-section" id="tag7">
+    <h2 class="day-title">Sonntag</h2>
+
+    <article class="meal-card">
+        <div class="meal-header" onclick="toggleMeal(this)">
+            <div class="meal-emoji emoji-breakfast">🍳</div>
+            <div class="meal-header-text">
+                <span class="meal-tag tag-fruehstueck">Frühstück</span>
+                <h3>Omelette mit Tomaten & Kräutern</h3>
+            </div>
+            <span class="meal-toggle">▾</span>
+        </div>
+        <div class="meal-details">
+            <div class="meal-content">
+                <h4>Zutaten</h4>
+                <ul class="ingredients">
+                    <li><span>3</span> Eier</li>
+                    <li><span>5</span> Cherrytomaten, halbiert</li>
+                    <li><span>20 g</span> Gruyère, gerieben</li>
+                    <li><span>1 EL</span> Butter</li>
+                    <li><span></span> Petersilie, Schnittlauch, Salz, Pfeffer</li>
+                </ul>
+                <h4>Zubereitung</h4>
+                <div class="recipe-steps">
+                    <ol>
+                        <li>Eier verquirlen, würzen.</li>
+                        <li>In Butter bei mittlerer Hitze stocken lassen.</li>
+                        <li>Tomaten und Käse auf eine Hälfte, zuklappen.</li>
+                        <li>Mit Kräutern bestreuen.</li>
+                    </ol>
+                </div>
+                <div class="portion-info"><strong>1 Portion</strong> · ca. 380 kcal · 10 Min.</div>
+                <p class="source-note">Eier grün · Cherrytomaten grün ≤5 Stk · Gruyère grün (Monash)</p>
+            </div>
+        </div>
+    </article>
+
+    <article class="meal-card">
+        <div class="meal-header" onclick="toggleMeal(this)">
+            <div class="meal-emoji emoji-lunch">🍖</div>
+            <div class="meal-header-text">
+                <span class="meal-tag tag-mittag">Mittagessen</span>
+                <h3>Pouletschenkel mit Ofengemüse</h3>
+            </div>
+            <span class="meal-toggle">▾</span>
+        </div>
+        <div class="meal-details">
+            <div class="meal-content">
+                <h4>Zutaten</h4>
+                <ul class="ingredients">
+                    <li><span>2</span> Pouletschenkel (ca. 250 g)</li>
+                    <li><span>200 g</span> Kartoffeln, geviertelt</li>
+                    <li><span>1</span> Rüebli, Stücke</li>
+                    <li><span>½</span> Zucchetti, Scheiben</li>
+                    <li><span>2 EL</span> Olivenöl</li>
+                    <li><span></span> Rosmarin, Thymian, Salz, Pfeffer</li>
+                </ul>
+                <h4>Zubereitung</h4>
+                <div class="recipe-steps">
+                    <ol>
+                        <li>Ofen auf 200 °C vorheizen.</li>
+                        <li>Gemüse mit Öl und Kräutern auf Blech verteilen.</li>
+                        <li>Poulet dazulegen, würzen.</li>
+                        <li>40 Min. backen bis golden.</li>
+                    </ol>
+                </div>
+                <div class="portion-info"><strong>1 Portion</strong> · ca. 620 kcal · 50 Min.</div>
+                <p class="source-note">Poulet grün · Kartoffeln grün · Zucchetti grün ≤65 g (Monash)</p>
+            </div>
+        </div>
+    </article>
+
+    <article class="meal-card">
+        <div class="meal-header" onclick="toggleMeal(this)">
+            <div class="meal-emoji emoji-dinner">🥙</div>
+            <div class="meal-header-text">
+                <span class="meal-tag tag-abend">Abendessen</span>
+                <h3>Buchweizen-Galette mit Schinken & Ei</h3>
+            </div>
+            <span class="meal-toggle">▾</span>
+        </div>
+        <div class="meal-details">
+            <div class="meal-content">
+                <h4>Zutaten</h4>
+                <ul class="ingredients">
+                    <li><span>50 g</span> Buchweizenmehl</li>
+                    <li><span>120 ml</span> Wasser</li>
+                    <li><span>1</span> Ei</li>
+                    <li><span>1 Scheibe</span> gekochter Schinken</li>
+                    <li><span>30 g</span> Gruyère, gerieben</li>
+                    <li><span>1 TL</span> Butter</li>
+                    <li><span></span> Salz, Pfeffer</li>
+                </ul>
+                <h4>Zubereitung</h4>
+                <div class="recipe-steps">
+                    <ol>
+                        <li>Mehl mit Wasser und Salz glatt rühren.</li>
+                        <li>Dünn in Butter ausbacken (2 Min. pro Seite).</li>
+                        <li>Ei aufschlagen, Schinken und Käse darauf.</li>
+                        <li>Ränder einklappen, unter Deckel 2 Min. garen.</li>
+                    </ol>
+                </div>
+                <div class="portion-info"><strong>1 Portion</strong> · ca. 400 kcal · 15 Min.</div>
+                <p class="source-note">Buchweizenmehl grün · Schinken grün · Gruyère grün (Monash)</p>
+            </div>
+        </div>
+    </article>
+
+    <article class="meal-card">
+        <div class="meal-header" onclick="toggleMeal(this)">
+            <div class="meal-emoji emoji-snack">🍓</div>
+            <div class="meal-header-text">
+                <span class="meal-tag tag-snack">Snack</span>
+                <h3>Kokos-Hafer-Bällchen</h3>
+            </div>
+            <span class="meal-toggle">▾</span>
+        </div>
+        <div class="meal-details">
+            <div class="meal-content">
+                <h4>Zutaten (ca. 8 Stück)</h4>
+                <ul class="ingredients">
+                    <li><span>40 g</span> Haferflocken (glutenfrei)</li>
+                    <li><span>2 EL</span> Tahini (Sesammus)</li>
+                    <li><span>1 EL</span> Ahornsirup</li>
+                    <li><span>2 EL</span> Kokosflocken</li>
+                    <li><span>20 g</span> dunkle Schokoladentropfen</li>
+                </ul>
+                <h4>Zubereitung</h4>
+                <div class="recipe-steps">
+                    <ol>
+                        <li>Alle Zutaten vermengen.</li>
+                        <li>Zu kleinen Kugeln formen.</li>
+                        <li>30 Min. im Kühlschrank fest werden lassen.</li>
+                    </ol>
+                </div>
+                <div class="portion-info"><strong>2 Stück</strong> · ca. 150 kcal · 10 Min. + Kühlzeit</div>
+                <p class="source-note">Tahini grün ≤1 EL/Portion · Haferflocken gf grün ≤52 g · Kokosflocken grün (Monash)</p>
+            </div>
+        </div>
+    </article>
+</section>
+
+<footer>
+    <p><strong>Hinweis:</strong> Dieser Plan ersetzt keine Ernährungsberatung. FODMAP-Diät idealerweise mit Fachperson durchführen.</p>
+    <p style="margin-top: 0.8rem;">
+        Quellen: <a href="https://www.monashfodmap.com">Monash University</a> ·
+        <a href="https://www.fodmap-konzept.ch">fodmap-konzept.ch</a> ·
+        <a href="https://www.reizdarmblog.de/ultimative-fodmap-liste/">reizdarmblog.de</a> ·
+        <a href="https://www.fodmaps.de/fodmap-liste/">fodmaps.de</a>
+    </p>
+</footer>
+
+<!-- BOTTOM TAB NAVIGATION -->
+<nav class="tab-nav">
+    <button class="active" onclick="showDay(1, this)"><span class="tab-icon">1</span>Mo</button>
+    <button onclick="showDay(2, this)"><span class="tab-icon">2</span>Di</button>
+    <button onclick="showDay(3, this)"><span class="tab-icon">3</span>Mi</button>
+    <button onclick="showDay(4, this)"><span class="tab-icon">4</span>Do</button>
+    <button onclick="showDay(5, this)"><span class="tab-icon">5</span>Fr</button>
+    <button onclick="showDay(6, this)"><span class="tab-icon">6</span>Sa</button>
+    <button onclick="showDay(7, this)"><span class="tab-icon">7</span>So</button>
+</nav>
+
+<script>
+function showDay(day, btn) {
+    document.querySelectorAll('.day-section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.tab-nav button').forEach(b => b.classList.remove('active'));
+    document.getElementById('tag' + day).classList.add('active');
+    btn.classList.add('active');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function toggleMeal(header) {
+    const card = header.closest('.meal-card');
+    card.classList.toggle('open');
+}
+
+// Swipe support
+let touchStartX = 0;
+let touchEndX = 0;
+let currentDay = 1;
+
+document.addEventListener('touchstart', e => {
+    touchStartX = e.changedTouches[0].screenX;
+}, { passive: true });
+
+document.addEventListener('touchend', e => {
+    touchEndX = e.changedTouches[0].screenX;
+    const diff = touchStartX - touchEndX;
+    if (Math.abs(diff) > 80) {
+        if (diff > 0 && currentDay < 7) {
+            currentDay++;
+        } else if (diff < 0 && currentDay > 1) {
+            currentDay--;
+        }
+        const btn = document.querySelectorAll('.tab-nav button')[currentDay - 1];
+        showDay(currentDay, btn);
+    }
+}, { passive: true });
+
+document.querySelectorAll('.tab-nav button').forEach((btn, i) => {
+    btn.addEventListener('click', () => { currentDay = i + 1; });
+});
+</script>
+
+</body>
+</html>
