@@ -1,24 +1,25 @@
 # my_fodmap – FODMAP Wochenplan
 
-Mobiler Ernährungsplan für die **Low-FODMAP Eliminationsphase** (Woche 1), basierend auf dem Monash University Ampelsystem.
+Mobiler Ernährungsplan für die **Low-FODMAP Eliminationsphase**, basierend auf dem Monash University Ampelsystem.
 
 🔗 **Live:** [dongoginho.github.io/my_fodmap](https://dongoginho.github.io/my_fodmap/)
 
 ## Features
 
-- 7 Tage × 4 Mahlzeiten = 28 Rezepte mit exakten Mengenangaben
+- 7 Tage × 4 Mahlzeiten = 28 Rezepte mit exakten Mengenangaben (1 Person)
 - Mobile-first Design mit Tab-Navigation und Swipe-Gesten
-- Aufklappbare Rezeptkarten (spart Platz auf dem Handy)
-- Kann als App auf dem Homescreen gespeichert werden (PWA)
+- Aufklappbare Rezeptkarten
+- Homescreen-fähig (PWA-Meta-Tags)
 - Keine externen Abhängigkeiten – eine einzige HTML-Datei
+- Monash-Quellenhinweis bei jedem Rezept
 
 ## Allergien berücksichtigt
 
 | Ausgeschlossen | Ersatz |
 |---|---|
-| Alle Nüsse (Baum-, Erd-, Cashew, Mandeln) | Kürbiskerne, Sonnenblumenkerne, Sesam |
+| Alle Nüsse (Baum-, Erd-, Cashew, Mandeln, Haselnüsse) | Kürbiskerne, Sonnenblumenkerne, Sesam |
 | Bananen | Heidelbeeren, Erdbeeren, Kiwi |
-| Sojaprodukte (Tofu, Sojasauce, Sojamilch) | Fischsauce, laktosefreie Milch, Kokosmilch |
+| Sojaprodukte (Tofu, Sojasauce, Sojamilch, Sojasprossen) | Fischsauce, laktosefreie Milch, Kokosmilch |
 
 ## Quellen
 
@@ -31,19 +32,19 @@ Alle Angaben stammen aus verifizierten FODMAP-Quellen:
 
 ## Wöchentlich aktualisieren
 
-Dieser Plan kann jede Woche mit neuen Rezepten aktualisiert werden. Anleitung:
+Dieser Plan wird regelmässig mit neuen Rezepten aktualisiert.
 
 ### Mit Claude Code
 
-```
+```bash
 cd G:\sszsim\_tmp\my_fodmap
 ```
 
-Dann einfach sagen:
+Dann:
 
-> „Erstelle einen neuen FODMAP-Wochenplan (Woche 2/3/...) mit den gleichen Vorgaben."
+> „Erstelle einen neuen FODMAP-Wochenplan (Woche 2) mit den gleichen Vorgaben."
 
-Claude kennt alle Regeln aus der `CLAUDE.md` automatisch.
+Claude liest `CLAUDE.md` automatisch und kennt alle Regeln. Siehe `WEEKLY_UPDATE.md` für weitere Prompt-Varianten.
 
 ### Regeln für neue Rezepte
 
@@ -51,15 +52,36 @@ Claude kennt alle Regeln aus der `CLAUDE.md` automatisch.
 2. **Keine Nüsse, Bananen, Sojaprodukte** (Allergie!)
 3. **Kein Knoblauch/Zwiebeln** (Knoblauchöl erlaubt)
 4. **Nur glutenfreie** Getreideprodukte
-5. **Olivenöl darf durch Sonnenblumenöl** ersetzt werden
-6. Jedes Rezept braucht: Zutaten mit Gramm, Schritte, kcal, Zeit, Monash-Quellenhinweis
+5. **Olivenöl ↔ Sonnenblumenöl** austauschbar
+6. Jedes Rezept: Zutaten (Gramm), Schritte, kcal, Zeit, Monash-Hinweis
+
+### Deployment
+
+```bash
+git add index.html
+git commit -m "Woche N: neuer Plan"
+git push
+```
+
+GitHub Pages aktualisiert automatisch (~1 Minute).
+
+## Projektstruktur
+
+```
+my_fodmap/
+├── index.html          # Die App (wird live angezeigt)
+├── README.md           # Diese Datei
+├── CLAUDE.md           # Regeln für Claude Code
+└── WEEKLY_UPDATE.md    # Prompt-Vorlagen für Updates
+```
 
 ## Technisch
 
-- Single HTML file – einfach `index.html` ersetzen
-- Kein Build-Prozess nötig
-- Push auf `main` → GitHub Pages aktualisiert automatisch (~1 Min.)
+- Single HTML file – `index.html` ersetzen reicht
+- Kein Build-Prozess, keine Dependencies
+- GitHub Pages serviert direkt aus `main` branch
+- Responsive: Mobile-first, Desktop ab 768px
 
 ## Lizenz
 
-Persönlicher Gebrauch. Rezepte basieren auf öffentlich verfügbaren FODMAP-Richtlinien.
+Persönlicher Gebrauch. Rezepte basieren auf öffentlich verfügbaren FODMAP-Richtlinien der Monash University.
